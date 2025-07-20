@@ -5,12 +5,16 @@ import { comparePassword, generateToken } from '@/lib/utils';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Login API called');
     await connectToDatabase();
+    console.log('Database connected');
     
     const { emailOrUsername, password } = await request.json();
+    console.log('Login attempt for:', emailOrUsername);
     
     // Validation
     if (!emailOrUsername || !password) {
+      console.log('Missing credentials');
       return NextResponse.json(
         { error: 'Email/username and password are required' },
         { status: 400 }
@@ -24,8 +28,10 @@ export async function POST(request: NextRequest) {
         { username: emailOrUsername.toLowerCase() }
       ]
     });
+    console.log('User found:', user ? 'Yes' : 'No');
     
     if (!user) {
+      console.log('User not found');
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
@@ -34,8 +40,10 @@ export async function POST(request: NextRequest) {
     
     // Check password
     const isPasswordValid = await comparePassword(password, user.password);
+    console.log('Password valid:', isPasswordValid);
     
     if (!isPasswordValid) {
+      console.log('Invalid password');
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }

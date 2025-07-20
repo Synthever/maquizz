@@ -5,12 +5,16 @@ import { hashPassword } from '@/lib/utils';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Register API called');
     await connectToDatabase();
+    console.log('Database connected');
     
     const { name, username, email, password } = await request.json();
+    console.log('Registration attempt for:', email, username);
     
     // Validation
     if (!name || !username || !email || !password) {
+      console.log('Missing required fields');
       return NextResponse.json(
         { error: 'All fields are required' },
         { status: 400 }
@@ -18,6 +22,7 @@ export async function POST(request: NextRequest) {
     }
     
     if (password.length < 6) {
+      console.log('Password too short');
       return NextResponse.json(
         { error: 'Password must be at least 6 characters long' },
         { status: 400 }
@@ -28,8 +33,10 @@ export async function POST(request: NextRequest) {
     const existingUser = await User.findOne({
       $or: [{ email }, { username: username.toLowerCase() }]
     });
+    console.log('Existing user found:', existingUser ? 'Yes' : 'No');
     
     if (existingUser) {
+      console.log('User already exists');
       return NextResponse.json(
         { error: 'User with this email or username already exists' },
         { status: 409 }

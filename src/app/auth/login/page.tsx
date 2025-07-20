@@ -27,7 +27,10 @@ function LoginForm() {
     setError('');
     setLoading(true);
 
+    console.log('Form submitted with:', formData);
+
     try {
+      console.log('Sending login request...');
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -36,19 +39,25 @@ function LoginForm() {
         body: JSON.stringify(formData),
       });
 
+      console.log('Response status:', response.status);
       const data = await response.json();
+      console.log('Response data:', data);
 
       if (response.ok) {
+        console.log('Login successful, storing data...');
         // Store user data in localStorage
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('token', data.token);
         
+        console.log('Data stored, redirecting...');
         // Redirect to dashboard
         router.push('/dashboard');
       } else {
+        console.log('Login failed:', data.error);
         setError(data.error || 'Login failed');
       }
-    } catch {
+    } catch (err) {
+      console.error('Login error:', err);
       setError('An error occurred. Please try again.');
     } finally {
       setLoading(false);
