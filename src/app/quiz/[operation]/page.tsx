@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 
@@ -43,25 +43,7 @@ export default function QuizSelection() {
     const params = useParams();
     const operation = params.operation as string;
 
-    useEffect(() => {
-        const userData = localStorage.getItem('user');
-        const token = localStorage.getItem('token');
-
-        if (!userData || !token) {
-            router.push('/auth/login');
-            return;
-        }
-
-        try {
-            const parsedUser = JSON.parse(userData);
-            setUser(parsedUser);
-            fetchAllProgress(parsedUser._id);
-        } catch {
-            router.push('/auth/login');
-        }
-    }, [router, operation]);
-
-    const fetchAllProgress = async (userId: string) => {
+    const fetchAllProgress = useCallback(async (userId: string) => {
         const levels = ['easy', 'medium', 'hard', 'extreme'];
         const progressPromises = levels.map(level =>
             fetch(`/api/progress?userId=${userId}&operation=${operation}&level=${level}`)
@@ -83,7 +65,25 @@ export default function QuizSelection() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [operation]);
+
+    useEffect(() => {
+        const userData = localStorage.getItem('user');
+        const token = localStorage.getItem('token');
+
+        if (!userData || !token) {
+            router.push('/auth/login');
+            return;
+        }
+
+        try {
+            const parsedUser = JSON.parse(userData);
+            setUser(parsedUser);
+            fetchAllProgress(parsedUser._id);
+        } catch {
+            router.push('/auth/login');
+        }
+    }, [router, operation, fetchAllProgress]);
 
     const getEpisodeStatus = (level: string, episodeNum: number) => {
         const progress = progressData[level];

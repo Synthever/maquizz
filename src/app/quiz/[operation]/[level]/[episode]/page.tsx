@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 
@@ -68,37 +68,7 @@ export default function QuizPage() {
   const level = params.level as string;
   const episode = parseInt(params.episode as string);
 
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-    
-    if (!userData || !token) {
-      router.push('/auth/login');
-      return;
-    }
-
-    try {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      fetchQuiz();
-    } catch {
-      router.push('/auth/login');
-    }
-  }, [router, operation, level, episode]);
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (gameStarted && timeLeft > 0 && !gameEnded) {
-      timer = setTimeout(() => {
-        setTimeLeft(timeLeft - 1);
-      }, 1000);
-    } else if (timeLeft === 0 && gameStarted) {
-      endGame();
-    }
-    return () => clearTimeout(timer);
-  }, [timeLeft, gameStarted, gameEnded]);
-
-  const fetchQuiz = async () => {
+  const fetchQuiz = useCallback(async () => {
     try {
       const response = await fetch(`/api/quiz?operation=${operation}&level=${level}&episode=${episode}`);
       const data = await response.json();
@@ -114,33 +84,9 @@ export default function QuizPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [operation, level, episode]);
 
-  const startGame = () => {
-    setGameStarted(true);
-  };
-
-  const submitAnswer = () => {
-    if (!quiz || !userAnswer.trim()) return;
-
-    const answer = parseInt(userAnswer);
-    const correct = answer === quiz.questions[currentQuestion].answer;
-    
-    if (correct) {
-      setScore(score + 1);
-    }
-    
-    setAnswers([...answers, answer]);
-    setUserAnswer('');
-
-    if (currentQuestion + 1 < quiz.questions.length) {
-      setCurrentQuestion(currentQuestion + 1);
-    } else {
-      endGame();
-    }
-  };
-
-  const endGame = async () => {
+  const endGame = useCallback(async () => {
     setGameEnded(true);
     
     if (!quiz || !user) return;
@@ -184,6 +130,60 @@ export default function QuizPage() {
       }
     } catch (error) {
       console.error('Error submitting quiz:', error);
+    }
+  }, [quiz, user, operation, level, episode, score]);
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    const token = localStorage.getItem('token');
+    
+    if (!userData || !token) {
+      router.push('/auth/login');
+      return;
+    }
+
+    try {
+      const parsedUser = JSON.parse(userData);
+      setUser(parsedUser);
+      fetchQuiz();
+    } catch {
+      router.push('/auth/login');
+    }
+  }, [router, operation, level, episode, fetchQuiz]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (gameStarted && timeLeft > 0 && !gameEnded) {
+      timer = setTimeout(() => {
+        setTimeLeft(timeLeft - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && gameStarted) {
+      endGame();
+    }
+    return () => clearTimeout(timer);
+  }, [timeLeft, gameStarted, gameEnded, endGame]);
+
+  const startGame = () => {
+    setGameStarted(true);
+  };
+
+  const submitAnswer = () => {
+    if (!quiz || !userAnswer.trim()) return;
+
+    const answer = parseInt(userAnswer);
+    const correct = answer === quiz.questions[currentQuestion].answer;
+    
+    if (correct) {
+      setScore(score + 1);
+    }
+    
+    setAnswers([...answers, answer]);
+    setUserAnswer('');
+
+    if (currentQuestion + 1 < quiz.questions.length) {
+      setCurrentQuestion(currentQuestion + 1);
+    } else {
+      endGame();
     }
   };
 
