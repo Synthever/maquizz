@@ -98,14 +98,14 @@ export async function POST(request: NextRequest) {
     );
     
     if (existingEpisode) {
-      // Update existing episode if new score is better
-      if (score > existingEpisode.bestScore) {
+      // Update existing episode if new score is better OR same (to update isPerfect and other fields)
+      if (score >= existingEpisode.bestScore) {
         const pointsDifference = (score - existingEpisode.bestScore) * quizEpisode.pointsPerQuestion;
         
         await User.findByIdAndUpdate(userId, {
           $set: {
             'completedEpisodes.$.score': score,
-            'completedEpisodes.$.bestScore': score,
+            'completedEpisodes.$.bestScore': Math.max(score, existingEpisode.bestScore || 0),
             'completedEpisodes.$.isPerfect': isPerfect,
             'completedEpisodes.$.timeCompleted': new Date(),
             'completedEpisodes.$.attempts': (existingEpisode.attempts || 0) + 1,
@@ -117,11 +117,11 @@ export async function POST(request: NextRequest) {
         
         return NextResponse.json(
           { 
-            message: 'Quiz completed successfully - New best score!',
+            message: score > existingEpisode.bestScore ? 'Quiz completed successfully - New best score!' : 'Quiz completed successfully',
             pointsEarned: pointsDifference,
             totalScore: score,
             isPerfect,
-            isNewBest: true,
+            isNewBest: score > existingEpisode.bestScore,
             attempts: (existingEpisode.attempts || 0) + 1
           },
           { status: 200 }
