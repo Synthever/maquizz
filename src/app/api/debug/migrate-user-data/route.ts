@@ -4,7 +4,7 @@ import User from '@/models/User';
 
 export async function POST() {
   try {
-    console.log('Starting data migration for User.completedEpisodes...');
+    console.log('Starting comprehensive data migration for User.completedEpisodes...');
     await connectToDatabase();
     
     // Find users with completedEpisodes that might be missing bestScore or maxScore
@@ -15,6 +15,7 @@ export async function POST() {
     console.log(`Found ${users.length} users with completed episodes`);
     
     let updatedCount = 0;
+    let totalIssuesFixed = 0;
     
     for (const user of users) {
       let needsUpdate = false;
@@ -27,22 +28,33 @@ export async function POST() {
       }) => {
         const updatedEpisode = { ...episode };
         
-        // Add missing bestScore field
-        if (!episode.bestScore && episode.score) {
-          updatedEpisode.bestScore = episode.score;
+        // Fix missing or incorrect bestScore field
+        if (!episode.bestScore || episode.bestScore < episode.score!) {
+          updatedEpisode.bestScore = episode.score || 0;
           needsUpdate = true;
+          totalIssuesFixed++;
+          console.log(`Fixed bestScore for episode: ${episode.score} -> ${updatedEpisode.bestScore}`);
         }
         
         // Add missing maxScore field
         if (!episode.maxScore) {
           updatedEpisode.maxScore = 10;
           needsUpdate = true;
+          totalIssuesFixed++;
         }
         
         // Add missing attempts field
         if (!episode.attempts) {
           updatedEpisode.attempts = 1;
           needsUpdate = true;
+          totalIssuesFixed++;
+        }
+        
+        // Ensure score exists
+        if (!episode.score && episode.score !== 0) {
+          updatedEpisode.score = 0;
+          needsUpdate = true;
+          totalIssuesFixed++;
         }
         
         return updatedEpisode;
@@ -59,9 +71,10 @@ export async function POST() {
     
     return NextResponse.json({
       success: true,
-      message: `Migration completed. Updated ${updatedCount} users.`,
+      message: `Comprehensive migration completed. Updated ${updatedCount} users with ${totalIssuesFixed} issues fixed.`,
       totalUsers: users.length,
-      updatedUsers: updatedCount
+      updatedUsers: updatedCount,
+      issuesFixed: totalIssuesFixed
     });
     
   } catch (error) {

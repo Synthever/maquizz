@@ -92,10 +92,14 @@ export default function QuizSelection() {
         }
 
         const episodeData = progress.progressMap[episodeNum];
+        
+        // Use bestScore primarily, fallback to score if bestScore doesn't exist
+        const displayScore = episodeData.bestScore !== undefined ? episodeData.bestScore : episodeData.score || 0;
+        
         return {
             completed: true,
             isPerfect: episodeData.isPerfect || false,
-            score: episodeData.bestScore || episodeData.score || 0,
+            score: displayScore,
             attempts: episodeData.attempts || 1,
         };
     };

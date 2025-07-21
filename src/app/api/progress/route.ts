@@ -59,10 +59,14 @@ export async function GET(request: NextRequest) {
     // Create progress map
     const progressMap: ProgressMap = {};
     episodesProgress.forEach((ep: EpisodeProgress) => {
+      // Ensure bestScore exists and is correct
+      const bestScore = ep.bestScore !== undefined ? ep.bestScore : ep.score || 0;
+      const score = ep.score || 0;
+      
       progressMap[ep.episode] = {
-        score: ep.score || 0,
+        score: score,
         maxScore: ep.maxScore || 10,
-        bestScore: ep.bestScore || ep.score || 0,
+        bestScore: bestScore,
         isPerfect: ep.isPerfect || false,
         attempts: ep.attempts || 1,
         timeCompleted: ep.timeCompleted,

@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
             'completedEpisodes.$.bestScore': score,
             'completedEpisodes.$.isPerfect': isPerfect,
             'completedEpisodes.$.timeCompleted': new Date(),
-            'completedEpisodes.$.attempts': existingEpisode.attempts + 1,
+            'completedEpisodes.$.attempts': (existingEpisode.attempts || 0) + 1,
           },
           $inc: {
             totalPoints: pointsDifference
@@ -122,15 +122,15 @@ export async function POST(request: NextRequest) {
             totalScore: score,
             isPerfect,
             isNewBest: true,
-            attempts: existingEpisode.attempts + 1
+            attempts: (existingEpisode.attempts || 0) + 1
           },
           { status: 200 }
         );
       } else {
         // Just update attempts, no points change
         await User.findByIdAndUpdate(userId, {
-          $inc: {
-            'completedEpisodes.$.attempts': 1
+          $set: {
+            'completedEpisodes.$.attempts': (existingEpisode.attempts || 0) + 1
           }
         });
         
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
             totalScore: score,
             isPerfect,
             isNewBest: false,
-            attempts: existingEpisode.attempts + 1,
+            attempts: (existingEpisode.attempts || 0) + 1,
             bestScore: existingEpisode.bestScore
           },
           { status: 200 }
