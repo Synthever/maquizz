@@ -286,8 +286,8 @@ export default function Profile() {
                                                 <div className="text-gray-300 text-sm">Episode {episode.episode}</div>
                                             </div>
                                             <div className="text-right">
-                                                <div className="text-white font-bold">{episode.score}/10</div>
-                                                <div className="text-yellow-400 text-sm">+{episode.score * (episode.level === 'easy' ? 1 : episode.level === 'medium' ? 2 : episode.level === 'hard' ? 3 : 5)} pts</div>
+                                                <div className="text-white font-bold">{episode.score || 0}/10</div>
+                                                <div className="text-yellow-400 text-sm">+{(episode.score || 0) * (episode.level === 'easy' ? 1 : episode.level === 'medium' ? 2 : episode.level === 'hard' ? 3 : 5)} pts</div>
                                             </div>
                                         </div>
                                     ))}

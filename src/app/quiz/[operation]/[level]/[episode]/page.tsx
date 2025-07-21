@@ -304,7 +304,7 @@ export default function QuizPage() {
                   )}
                   {!quizResult.isNewBest && quizResult.attempts > 1 && (
                     <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-3 rounded-lg mb-4">
-                      🔄 Attempt #{quizResult.attempts} - Best Score: {quizResult.bestScore}/10
+                      🔄 Attempt #{quizResult.attempts} - Best Score: {quizResult.bestScore || 0}/10
                     </div>
                   )}
                 </div>

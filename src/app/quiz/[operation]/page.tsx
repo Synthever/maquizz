@@ -94,9 +94,9 @@ export default function QuizSelection() {
         const episodeData = progress.progressMap[episodeNum];
         return {
             completed: true,
-            isPerfect: episodeData.isPerfect,
-            score: episodeData.bestScore,
-            attempts: episodeData.attempts,
+            isPerfect: episodeData.isPerfect || false,
+            score: episodeData.bestScore || episodeData.score || 0,
+            attempts: episodeData.attempts || 1,
         };
     };
 

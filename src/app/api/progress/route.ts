@@ -60,11 +60,11 @@ export async function GET(request: NextRequest) {
     const progressMap: ProgressMap = {};
     episodesProgress.forEach((ep: EpisodeProgress) => {
       progressMap[ep.episode] = {
-        score: ep.score,
-        maxScore: ep.maxScore,
-        bestScore: ep.bestScore,
-        isPerfect: ep.isPerfect,
-        attempts: ep.attempts,
+        score: ep.score || 0,
+        maxScore: ep.maxScore || 10,
+        bestScore: ep.bestScore || ep.score || 0,
+        isPerfect: ep.isPerfect || false,
+        attempts: ep.attempts || 1,
         timeCompleted: ep.timeCompleted,
       };
     });
