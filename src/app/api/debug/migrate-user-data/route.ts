@@ -19,11 +19,39 @@ export async function POST() {
     
     for (const user of users) {
       let needsUpdate = false;
-      const updatedEpisodes = user.completedEpisodes.map((episode: {
+      
+      // Remove duplicates and keep only the best score for each episode
+      const episodeMap = new Map();
+      user.completedEpisodes.forEach((episode: {
+        operation: string;
+        level: string;
+        episode: number;
+        score?: number;
+        bestScore?: number;
+        [key: string]: unknown;
+      }) => {
+        const key = `${episode.operation}-${episode.level}-${episode.episode}`;
+        const currentScore = episode.bestScore || episode.score || 0;
+        
+        if (!episodeMap.has(key) || episodeMap.get(key).score < currentScore) {
+          episodeMap.set(key, { ...episode, score: currentScore });
+        }
+      });
+      
+      const uniqueEpisodes = Array.from(episodeMap.values());
+      
+      if (uniqueEpisodes.length !== user.completedEpisodes.length) {
+        console.log(`Removed ${user.completedEpisodes.length - uniqueEpisodes.length} duplicate episodes for user ${user.username}`);
+        needsUpdate = true;
+        totalIssuesFixed += user.completedEpisodes.length - uniqueEpisodes.length;
+      }
+      
+      const updatedEpisodes = uniqueEpisodes.map((episode: {
         bestScore?: number;
         score?: number;
         maxScore?: number;
         attempts?: number;
+        isPerfect?: boolean;
         [key: string]: unknown;
       }) => {
         const updatedEpisode = { ...episode };
@@ -34,6 +62,16 @@ export async function POST() {
           needsUpdate = true;
           totalIssuesFixed++;
           console.log(`Fixed bestScore for episode: ${episode.score} -> ${updatedEpisode.bestScore}`);
+        }
+        
+        // Fix isPerfect field based on score
+        const currentScore = episode.bestScore || episode.score || 0;
+        const shouldBePerfect = currentScore === 10;
+        if (episode.isPerfect !== shouldBePerfect) {
+          updatedEpisode.isPerfect = shouldBePerfect;
+          needsUpdate = true;
+          totalIssuesFixed++;
+          console.log(`Fixed isPerfect for episode: score=${currentScore}, isPerfect=${shouldBePerfect}`);
         }
         
         // Add missing maxScore field
