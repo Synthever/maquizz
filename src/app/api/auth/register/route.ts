@@ -70,8 +70,25 @@ export async function POST(request: NextRequest) {
     
   } catch (error) {
     console.error('Registration error:', error);
+    
+    // More detailed error for debugging in production
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    console.error('Registration error details:', {
+      message: errorMessage,
+      stack: errorStack,
+      timestamp: new Date().toISOString()
+    });
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        details: process.env.NODE_ENV === 'development' ? {
+          message: errorMessage,
+          stack: errorStack
+        } : undefined
+      },
       { status: 500 }
     );
   }
